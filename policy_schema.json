@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-2020-12/schema#",
+  "title": "policy",
+  "description": "A security policy",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Policy's human-readable name"
+    },
+    "status": {
+      "type": "string",
+      "description": "Policy's status",
+      "enum": [
+        "active",
+        "inactive"
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Rules's human-readable name"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Rule's priority",
+            "exclusiveMinimum": 0
+          },
+          "status": {
+            "type": "string",
+            "description": "Rule's status",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "global",
+                  "tenant",
+                  "group",
+                  "user"
+                ]
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope"
+            ],
+            "additionalProperties": false,
+            "if": {
+              "properties": {
+                "scope": {
+                  "enum": [
+                    "tenant",
+                    "group",
+                    "user"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "geographies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "US",
+                "CA",
+                "FR",
+                "DE",
+                "IT"
+              ]
+            },
+            "uniqueItems": true,
+            "minItems": 1
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/bool_node"
+              },
+              {
+                "$ref": "#/$defs/bool_leaf"
+              }
+            ]
+          },
+          "action": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "allow",
+                  "deny"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "name",
+          "priority",
+          "status",
+          "target",
+          "geographies",
+          "action"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "name",
+    "status",
+    "rules"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "bool_node": {
+      "type": "object",
+      "properties": {
+        "operator": {
+          "type": "string",
+          "enum": [
+            "and",
+            "or",
+            "not"
+          ]
+        },
+        "operands": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/bool_node"
+              },
+              {
+                "$ref": "#/$defs/bool_leaf"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "operator",
+        "operands"
+      ],
+      "if": {
+        "properties": {
+          "operator": {
+            "enum": [
+              "and",
+              "or"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "operands": {
+            "minItems": 2
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "operands": {
+            "minItems": 1,
+            "maxItems": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "bool_leaf": {
+      "type": "object",
+      "properties": {
+        "attribute": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "between",
+            "not_between",
+            "in",
+            "nin",
+            "eq",
+            "ne",
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "regex",
+            "not_regex",
+            "starts_with",
+            "ends_with",
+            "contains"
+          ]
+        },
+        "value": {
+          "description": "the value(s)"
+        }
+      },
+      "required": [
+        "attribute",
+        "operator",
+        "value"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

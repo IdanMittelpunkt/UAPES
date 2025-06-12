@@ -170,6 +170,7 @@ app.delete('/policies', validateJWT, async (req, res) => {
     }
 });
 
+
 app.listen(3000, () => {
    console.log('Service is running on port 3000');
 });
