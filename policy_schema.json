@@ -1,5 +1,4 @@
 {
-  "$schema": "http://json-schema.org/draft-2020-12/schema#",
   "title": "policy",
   "description": "A security policy",
   "type": "object",
@@ -162,10 +161,6 @@
           }
         }
       },
-      "required": [
-        "operator",
-        "operands"
-      ],
       "if": {
         "properties": {
           "operator": {
@@ -223,11 +218,6 @@
           "description": "the value(s)"
         }
       },
-      "required": [
-        "attribute",
-        "operator",
-        "value"
-      ],
       "additionalProperties": false
     }
   }

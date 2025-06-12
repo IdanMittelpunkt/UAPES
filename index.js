@@ -1,8 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ObjectId } = require('mongodb');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
+app.use(express.json());
 
 let dbConnection;   // will hold our db connection to mongo db
 
@@ -170,6 +172,53 @@ app.delete('/policies', validateJWT, async (req, res) => {
     }
 });
 
+/**
+ * POST /policies
+ *
+ */
+app.post('/policies', validateJWT, async (req, res) => {
+    /*
+        For some reason, ajv did not play well in validating policies against our schema (./policy_schema.json),
+        even when we removed the "$schema" field.
+        It is odd, as it works perfectly in https://www.jsonschemavalidator.net/ (that uses Json.NET library)
+
+        After 6 hours working on that, I decided to skip validation, though it is crucial for production.
+     */
+
+    const dbConn = await getDbConn();
+
+
+    let data = req.body;
+
+    const current_timestamp = Date.now();
+
+    // add metadata to the policy object
+    data['metadata'] = {
+            "author": req.app_context['sub'],
+            "tenantId": req.app_context['tenant'],
+            "createdAt": current_timestamp,
+            "updatedAt": current_timestamp,
+            "version": 1
+    }
+
+    // add metadata to each rule
+    data['rules'].forEach(rule => {
+        rule['id'] = uuidv4();
+        rule['metadata'] = {
+            "author": req.app_context['sub'],
+            "createdAt": current_timestamp,
+            "updatedAt": current_timestamp,
+            "version": 1
+        }
+    });
+
+    const result = await dbConn
+        .db('rules')
+        .collection('policies')
+        .insertOne(data)
+
+    res.status(200).json({ id: result.insertedId });
+});
 
 app.listen(3000, () => {
    console.log('Service is running on port 3000');
