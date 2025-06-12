@@ -67,16 +67,12 @@ function validateJWT(req, res, next) {
 /**
  *  GET /policies
  *
- *  Automatically scopes the resultset to the tenant of the caller
- *
  *  Filters (as query parameters) (all optionals):
  *  ==============================
- *  policy_id=<policy id>
+ *  id=<policy id>
  *  author=<email>
  *  status=<active/inactive>
- *  contains_rule_id=<rule_id>
  *  with_rules=<true/false> (defaults to false)
- *  expand_rules=<true/false> (relevant only if with_rules==true)
  */
 app.get('/policies', validateJWT, async (req, res) => {
     const dbConn = await getDbConn();
@@ -85,19 +81,23 @@ app.get('/policies', validateJWT, async (req, res) => {
     let match_obj = {
         'metadata.tenantId': req.app_context['tenant']
     };
-    let project_obj = {};
-    let lookup_obj = {}
+    let project_obj = {
+        'rules': 0
+    };
 
     // accepted query parameters:
-    const qp_policyId = req.query.id;
+    const qp_id = req.query.id;
     const qp_author = req.query.author;
     const qp_status = req.query.status;
-    const qp_containsRuleId = req.query.contains_rule_id;
     const qp_withRules = req.query.with_rules;
-    const qp_expandRules = req.query.expand_rules;
 
-    if (qp_policyId) {  // filter by policy id
-        match_obj['_id'] = new ObjectId(qp_policyId);
+
+    if (qp_id) {  // filter by policy id
+        try {
+            match_obj['_id'] = new ObjectId(qp_id);
+        } catch(error) {
+            res.status(400).json({message: "Malformed policy id."})
+        }
     }
 
     if (qp_author) {    // filter by author
@@ -108,31 +108,14 @@ app.get('/policies', validateJWT, async (req, res) => {
         match_obj['status'] = qp_status
     }
 
-    if (qp_containsRuleId) {    // filter by rule id
-        match_obj['rule_ids'] = qp_containsRuleId
-    }
-
-    if ( qp_withRules === 'false' ) {   // show rules (ids or full documents) in resultset ?
-        project_obj['rule_ids'] = 0
-    } else if (qp_withRules === 'true' ) {
-        if (qp_expandRules === 'true') {
-            // need to do a join with the rules collection
-            lookup_obj = {
-                from: 'rules',
-                localField: 'rule_ids',
-                foreignField: '_id',
-                as: 'rules'
-            }
-            // do not show the rule_ids array if we already present the full rule sub-documents
-            project_obj['rule_ids'] = 0;
-        }
+    if ( qp_withRules === 'true' ) {   // show rules in resultset ?
+        delete project_obj['rules'];
     }
 
     // build aggregation pipeline for mongodb
-    let aggregate_pipeline = [{$match: match_obj}];
-    if (Object.keys(lookup_obj).length > 0) {
-        aggregate_pipeline.push({$lookup: lookup_obj});
-    }
+    let aggregate_pipeline = [
+        {$match: match_obj},
+    ];
     if (Object.keys(project_obj).length > 0) {
         aggregate_pipeline.push({$project: project_obj});
     }
@@ -144,7 +127,47 @@ app.get('/policies', validateJWT, async (req, res) => {
             .aggregate(aggregate_pipeline)
             .toArray();
 
-    res.json(policies);
+    res.status(200).json(policies);
+});
+
+/**
+ *  DELETE /policies
+ *
+ *  Filters (as query parameters):
+ *  ==============================
+ *  id=<policy id> (mandatory)
+ */
+app.delete('/policies', validateJWT, async (req, res) => {
+    const dbConn = await getDbConn();
+
+    const qp_policyId = req.query.id;
+
+    let match_obj = {
+        'metadata.tenantId': req.app_context['tenant']
+    };
+
+    // prepare a query
+    if (qp_policyId) {
+        try {
+            match_obj['_id'] = new ObjectId(qp_policyId);
+        } catch(error) {
+            res.status(400).json({message: "Malformed policy id."})
+        }
+    } else {
+        res.status(400).json({message: "No policy identifier was provided."})
+    }
+
+    // find the policy document by its identifier
+    let policies = await dbConn
+        .db('rules')
+        .collection('policies')
+        .deleteOne(match_obj)
+
+    if (policies.deletedCount === 1) {
+        res.status(200).json({message: "success"});
+    } else {
+        res.status(404).json({message: "failure"});
+    }
 });
 
 app.listen(3000, () => {
