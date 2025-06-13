@@ -4,21 +4,35 @@ const { MongoClient, ObjectId } = require('mongodb');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
-app.use(express.json());
+app.use(express.json());    // needed for the req.body to be as a JavaScript object
 
-let dbConnection;   // will hold our db connection to mongo db
+// constants:
+const POLICY_STATUS = ['active', 'inactive'];
+const RULE_STATUS = ['active', 'inactive'];
+const BOOLEAN_VALUES = ['true', 'false'];
+const RULE_SCOPE = ['user', 'group', 'tenant', 'global'];
+const RULE_SCOPE_WITH_ID = ['user', 'group'];
+const APPCONTEXT_TENANT_KEY = 'tenant';
+const APPCONETXT_USER_KEY = 'sub';
+const DB_NAME = 'rules';
+const COLLECTION_NAME = 'policies';
 
+
+/**
+ * A method that asynchronously returns a valid connection to mongo db
+ * @returns {Promise<MongoClient|*>}
+ */
 async function getDbConn() {
-    if (dbConnection) {
-        return dbConnection;
+    if (global.dbConnection) {
+        return global.dbConnection;
     }
 
-    const mongoClient = new MongoClient('mongodb://localhost:27017/rules');
+    const mongoClient = new MongoClient(process.env.MONGODB_URI);
 
     try {
         await mongoClient.connect();
-        dbConnection = mongoClient;
-        return dbConnection;
+        global.dbConnection = mongoClient;
+        return global.dbConnection;
     } catch (error) {
         await mongoClient.close();
         throw error;
@@ -81,7 +95,7 @@ app.get('/policies', validateJWT, async (req, res) => {
 
     // prepare stages for mongodb collection's aggregate function's pipeline
     let match_obj = {
-        'metadata.tenantId': req.app_context['tenant']
+        'metadata.tenantId': req.app_context[APPCONTEXT_TENANT_KEY]
     };
     let project_obj = {
         'rules': 0
@@ -106,12 +120,23 @@ app.get('/policies', validateJWT, async (req, res) => {
         match_obj['metadata.author'] = qp_author
     }
 
-    if ( (qp_status) && (['active', 'inactive'].includes(qp_status)) ){ // filter by status
-        match_obj['status'] = qp_status
+    if (qp_status) {
+        if (POLICY_STATUS.includes(qp_status)) {
+            match_obj['status'] = qp_status
+        }
+        else {
+            res.status(400).json({message: "Invalid policy status."});
+        }
     }
 
-    if ( qp_withRules === 'true' ) {   // show rules in resultset ?
-        delete project_obj['rules'];
+    if (qp_withRules) {
+        if (BOOLEAN_VALUES.includes(qp_withRules)) {
+            if ( qp_withRules === 'true' ) {   // show rules in resultset ?
+                delete project_obj['rules'];
+            }
+        } else {
+            res.status(400).json({message: "Invalid with_rules value. Must be " + BOOLEAN_VALUES.join(", ") + "."});
+        }
     }
 
     // build aggregation pipeline for mongodb
@@ -124,8 +149,8 @@ app.get('/policies', validateJWT, async (req, res) => {
 
     const policies = await
         dbConn
-            .db('rules')
-            .collection('policies')
+            .db(DB_NAME)
+            .collection(COLLECTION_NAME)
             .aggregate(aggregate_pipeline)
             .toArray();
 
@@ -142,16 +167,16 @@ app.get('/policies', validateJWT, async (req, res) => {
 app.delete('/policies', validateJWT, async (req, res) => {
     const dbConn = await getDbConn();
 
-    const qp_policyId = req.query.id;
+    const qp_id = req.query.id;
 
     let match_obj = {
-        'metadata.tenantId': req.app_context['tenant']
+        'metadata.tenantId': req.app_context[APPCONTEXT_TENANT_KEY]
     };
 
     // prepare a query
-    if (qp_policyId) {
+    if (qp_id) {
         try {
-            match_obj['_id'] = new ObjectId(qp_policyId);
+            match_obj['_id'] = new ObjectId(qp_id);
         } catch(error) {
             res.status(400).json({message: "Malformed policy id."})
         }
@@ -161,8 +186,8 @@ app.delete('/policies', validateJWT, async (req, res) => {
 
     // find the policy document by its identifier
     let policies = await dbConn
-        .db('rules')
-        .collection('policies')
+        .db(DB_NAME)
+        .collection(COLLECTION_NAME)
         .deleteOne(match_obj)
 
     if (policies.deletedCount === 1) {
@@ -194,8 +219,8 @@ app.post('/policies', validateJWT, async (req, res) => {
 
     // add metadata to the policy object
     data['metadata'] = {
-            "author": req.app_context['sub'],
-            "tenantId": req.app_context['tenant'],
+            "author": req.app_context[APPCONETXT_USER_KEY],
+            "tenantId": req.app_context[APPCONTEXT_TENANT_KEY],
             "createdAt": current_timestamp,
             "updatedAt": current_timestamp,
             "version": 1
@@ -205,7 +230,7 @@ app.post('/policies', validateJWT, async (req, res) => {
     data['rules'].forEach(rule => {
         rule['id'] = uuidv4();
         rule['metadata'] = {
-            "author": req.app_context['sub'],
+            "author": req.app_context[APPCONETXT_USER_KEY],
             "createdAt": current_timestamp,
             "updatedAt": current_timestamp,
             "version": 1
@@ -213,11 +238,103 @@ app.post('/policies', validateJWT, async (req, res) => {
     });
 
     const result = await dbConn
-        .db('rules')
-        .collection('policies')
+        .db(DB_NAME)
+        .collection(COLLECTION_NAME)
         .insertOne(data)
 
     res.status(200).json({ id: result.insertedId });
+});
+
+/**
+ *  GET /rules
+ *
+ *   Filters (as query parameters):
+ *  ==============================
+ *  policy_id=<policy id>
+ *  id=<rule id>
+ *  policy_status=<policy status>
+ *  status=<rule status>
+ *  target.scope=<rule target scope>
+ *  target.id=<rule target id>
+ */
+app.get('/rules', validateJWT, async (req, res) => {
+    const dbConn = await getDbConn();
+
+    let match_obj = {
+        'metadata.tenantId': req.app_context[APPCONTEXT_TENANT_KEY]
+    };
+
+    const qp_policy_id = req.query.policy_id;
+    const qp_id = req.query.id;
+    const qp_policy_status = req.query.policy_status;
+    const qp_status = req.query.status;
+    const qp_target_scope = req.query['target.scope'];
+    const qp_target_id = req.query['target.id'];
+
+
+    if (qp_policy_id) {
+        try {
+            match_obj['_id'] = new ObjectId(qp_policy_id);
+        } catch (error) {
+            res.status(400).json({message: "Malformed policy id."})
+        }
+    }
+
+    if (qp_id) {
+        match_obj['rules.id'] = qp_id;
+    }
+
+    if (qp_policy_status) {
+        if (POLICY_STATUS.includes(qp_policy_status)) {
+            match_obj['status'] = qp_policy_status;
+        }
+        else {
+            res.status(400).json({message: "Invalid policy status. Must be " + POLICY_STATUS.join(", ") + "."});
+        }
+    }
+
+    if (qp_status) {
+        if (RULE_STATUS.includes(qp_status)) {
+            match_obj['rules.status'] = qp_status;
+        }
+        else {
+            res.status(400).json({message: "Invalid rule status. Must be " + RULE_STATUS.join(", ") + "."});
+        }
+    }
+
+    if (qp_target_scope) {
+        if (RULE_SCOPE.includes(qp_target_scope)) {
+            if (RULE_SCOPE_WITH_ID.includes(qp_target_scope)) {
+                if (qp_target_id) {
+                    match_obj['rules.target.scope'] = qp_target_scope;
+                    match_obj['rules.target.id'] = qp_target_id;
+                } else {
+                    res.status(400).json({message: "Missing rule target id."});
+                }
+            } else {
+                match_obj['rules.target.scope'] = qp_target_scope;
+            }
+        } else {
+            res.status(400).json({message: "Invalid rule target scope. Must be " + RULE_SCOPE.join(", ") + "."});
+        }
+    }
+
+    const rules = await dbConn
+        .db(DB_NAME)
+        .collection(COLLECTION_NAME)
+        .aggregate([
+            {
+                $unwind: "$rules"
+            },
+            {
+                $match: match_obj
+            },
+            {
+                $replaceWith: '$rules'
+            }
+        ]).toArray();
+
+    res.status(200).json(rules);
 });
 
 app.listen(3000, () => {
