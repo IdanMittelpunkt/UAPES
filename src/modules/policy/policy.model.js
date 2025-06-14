@@ -47,8 +47,10 @@ const PolicySchema = new mongoose.Schema({
     },
     // policy-tenant association
     tenantId: {
-        type: "String",
-        "required": false
+        type: "Number",
+        "required": false,
+        min: 1,
+        integer: true
     },
     // policy rules
     rules: {
