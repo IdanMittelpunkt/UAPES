@@ -7,5 +7,6 @@ const router = express.Router();
 router.get('/', jwtTokenMW, policyController.getPolicies);
 router.get('/:id', jwtTokenMW, policyController.getPolicy);
 router.post('/', jwtTokenMW, policyController.createPolicy);
+router.delete('/:id', jwtTokenMW, policyController.deletePolicy);
 
 export default router;
