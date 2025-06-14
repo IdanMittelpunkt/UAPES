@@ -15,7 +15,6 @@ const policyController = {
         const policy = await policyService.getPolicyById(req.app_context, req.params.id);
         if (!policy) {
             res.status(404);
-            throw new Error(`Policy with id ${req.params.id} not found.`);
         }
         res.json(policy);
     }),
@@ -27,7 +26,6 @@ const policyController = {
         const deletedPolicy = await policyService.deletePolicy(req.app_context, req.params.id);
         if (deletedPolicy.deletedCount === 0) {
             res.status(404);
-            throw new Error('Product not found');
         }
         res.status(200).json({ message: 'Policy deleted successfully.' });
     })
