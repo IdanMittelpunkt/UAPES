@@ -5,5 +5,6 @@ import ruleController from './rule.controller.js';
 const router = express.Router();
 
 router.get('/', jwtTokenMW, ruleController.getRules);
+router.get('/:id', jwtTokenMW, ruleController.getRule);
 
 export default router;

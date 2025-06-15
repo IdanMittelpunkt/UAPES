@@ -1,4 +1,6 @@
 import Policy from '../policy/policy.model.js';
+import mongoose from 'mongoose';
+const {ObjectId} = mongoose.Types;
 
 const ruleService = {
     /**
@@ -7,6 +9,7 @@ const ruleService = {
      *          policy_status - active/inactive
      *          policy_author - string
      *          policy_tenantId - int
+     *          rule_id
      *          rule_name - regex
      *          rule_description - regex
      *          rule_status - active/inactive
@@ -31,6 +34,10 @@ const ruleService = {
 
         if (query['policy_tenantId']) {
             policy_match_obj['tenantId'] = query['policy_tenantId'];
+        }
+
+        if (query['rule_id']) {
+            rule_match_obj['rules._id'] = new ObjectId(query['rule_id']);
         }
 
         if (query['rule_name']) {
@@ -76,11 +83,9 @@ const ruleService = {
         aggregate_pipeline.push({
             $match: rule_match_obj
         });
-        aggregate_pipeline.push(
-            {
-                $replaceWith: '$rules'
-            }
-        );
+        aggregate_pipeline.push({
+            $replaceWith: '$rules'
+        });
 
         return await Policy.aggregate(aggregate_pipeline);
     }

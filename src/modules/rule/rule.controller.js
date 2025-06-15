@@ -1,5 +1,6 @@
 import asyncHandler from "../../common/utils/asyncHandler.js";
 import ruleService from "./rule.service.js";
+import Constants from "../../common/config/constants.js";
 
 const ruleController = {
     /**
@@ -21,7 +22,7 @@ const ruleController = {
         const rules = await ruleService.getRules({
             policy_status: req.query['policy.status'],
             policy_author: req.query['policy.author'],
-            policy_tenantId: req.app_context[req.app_context.APPCONTEXT_TENANT_KEY] || req.query['policy.tenantId'],
+            policy_tenantId: req.app_context ? req.app_context[Constants.APPCONTEXT_TENANT_KEY] : req.query['policy.tenantId'],
             rule_name: req.query['name'],
             rule_description: req.query['description'],
             rule_status: req.query['status'],
@@ -32,6 +33,18 @@ const ruleController = {
             with_policy: req.query['with_policy']
         })
         res.json(rules);
+    }),
+
+    getRule: asyncHandler(async (req, res) => {
+        const rule = await ruleService.getRules({
+            rule_id: req.params.id,
+            policy_tenantId: req.app_context ? req.app_context[Constants.APPCONTEXT_TENANT_KEY] : undefined,
+        });
+        if (rule && rule.length > 0) {
+            res.json(rule[0]);
+        } else {
+            res.status(404).json({message: 'Rule not found.'});
+        }
     })
 };
 
