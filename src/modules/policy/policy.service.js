@@ -1,23 +1,35 @@
 import Policy from './policy.model.js';
-import Constants from '../../common/config/constants.js';
 
 const policyService = {
-    getPolicies: async (app_context, author, status, with_rules) => {
-        let match_obj = {
-            tenantId: app_context[Constants.APPCONTEXT_TENANT_KEY]
-        }
+    /**
+     * Get policies
+     * @param query - object with these optional fields
+     *          status - enum[active,inactive]
+     *          author - string
+     *          tenantId - int
+     *          with_rules - boolean
+     *
+     */
+    getPolicies: async (query) => {
+        let match_obj = {};
 
         let project_obj = {
             'rules': 0
         };
 
-        if (author) {
-            match_obj['author'] = author;
+        if (query['status']) {
+            match_obj['status'] = query['status'];
         }
-        if (status) {
-            match_obj['status'] = status;
+
+        if (query['author']) {
+            match_obj['author'] = query['author'];
         }
-        if (with_rules) {
+
+        if (query['tenantId']) {
+            match_obj['tenantId'] = query['tenantId'];
+        }
+
+        if (query['with_rules']) {
             delete project_obj['rules']
         }
 
@@ -30,20 +42,66 @@ const policyService = {
 
         return await Policy.aggregate(aggregate_pipeline);
     },
-    getPolicyById: async (app_context, id) => {
-        return await Policy.findById(id);
+
+    /**
+     * Get policy by identifier
+     * @param query - object with these optional fields
+     *          tenantId - int
+     *          id - int
+     */
+    getPolicyById: async (query) => {
+        let match_obj = {};
+
+        if (query.id) {
+            match_obj['_id'] = query.id;
+        }
+
+        if (query.tenantId) {
+            match_obj['tenantId'] = query.tenantId;
+        }
+
+        return await Policy.findOne(match_obj);
     },
-    createPolicy: async (app_context, policy) => {
+    /**
+     * Create a new policy
+     * @param query - object with these optional fields
+     *          tenantId
+     *          author
+     * @param policy
+     */
+    createPolicy: async (query, policy) => {
         const newPolicy = new Policy(policy);
-        // very important to override the tenantId !!!!
-        newPolicy.tenantId = app_context[Constants.APPCONTEXT_TENANT_KEY];
+        // very important to override the tenantId & author !!!!
+        if (query['tenantId']) {
+            newPolicy.tenantId = query['tenantId'];
+        }
+        if (query['author']) {
+            newPolicy.author = query['author'];
+        }
+        newPolicy.rules.forEach(rule => {
+            rule.author = query['author'];
+        })
+
         return await newPolicy.save();
     },
-    deletePolicy: async (app_context, id) => {
-        return await Policy.deleteOne({
-            _id: id,
-            tenantId: app_context[Constants.APPCONTEXT_TENANT_KEY]
-        });
+    /**
+     * Delete a policy
+     * @param query - object with these optional fields
+     *          tenantId
+     *          id
+     */
+    deletePolicy: async (query) => {
+        let match_obj = {};
+
+        if (query.id) {
+            match_obj['_id'] = query.id;
+        }
+
+        if (query.tenantId) {
+            match_obj['tenantId'] = query.tenantId;
+        }
+
+        return await Policy.deleteOne(match_obj);
     }
 };
 
