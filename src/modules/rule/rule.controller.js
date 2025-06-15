@@ -34,7 +34,11 @@ const ruleController = {
         })
         res.json(rules);
     }),
-
+    /**
+     * Get a rule
+     * Expecting:
+     *  req.params['id']
+     */
     getRule: asyncHandler(async (req, res) => {
         const rule = await ruleService.getRules({
             rule_id: req.params.id,
@@ -45,6 +49,16 @@ const ruleController = {
         } else {
             res.status(404).json({message: 'Rule not found.'});
         }
+    }),
+    /**
+     * Update a rule
+     */
+    updateRule: asyncHandler(async (req, res) => {
+        const rule = await ruleService.updateRule({
+            rule_id: req.params.id,
+            policy_tenantId: req.app_context ? req.app_context[Constants.APPCONTEXT_TENANT_KEY] : undefined
+        }, req.body)
+        res.status(200).json(rule);
     })
 };
 

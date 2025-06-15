@@ -41,7 +41,7 @@ const policyController = {
     createPolicy: asyncHandler(async (req, res) => {
         const newPolicy = await policyService.createPolicy({
             'tenantId': req.app_context ? req.app_context[Constants.APPCONTEXT_TENANT_KEY] : undefined,
-            'author': req.app_context ? req.app_context[Constants.APPCONTEXT_TENANT_KEY] : undefined
+            'author': req.app_context ? req.app_context[Constants.APPCONETXT_USER_KEY] : undefined
         }, req.body);
         res.status(201).json(newPolicy);
     }),

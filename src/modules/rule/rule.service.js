@@ -88,6 +88,63 @@ const ruleService = {
         });
 
         return await Policy.aggregate(aggregate_pipeline);
+    },
+
+    /**
+     * Update a rule
+     * @param query - object with these optional fields
+     *          rule_id
+     *          policy_tenantId
+     * @param rule
+     * @returns {Promise<void>}
+     */
+    updateRule: async (query, rule) => {
+        const match_obj = {
+            'rules._id': new ObjectId(query['rule_id']),
+            'tenantId': query['policy_tenantId']
+        };
+
+        let set_obj = {};
+
+        if (rule.name) {
+            set_obj['rules.$.name'] = rule.name;
+        }
+
+        if (rule.description) {
+            set_obj['rules.$.description'] = rule.description;
+        }
+
+        if (rule.status) {
+            set_obj['rules.$.status'] = rule.status;
+        }
+
+        if (rule.target) {
+            set_obj['rules.$.target'] = rule.target;
+        }
+
+        if (rule.geographies) {
+            set_obj['rules.$.geographies'] = rule.geographies;
+        }
+
+        if (rule.condition) {
+            set_obj['rules.$.condition'] = rule.condition;
+        }
+
+        if (rule.action) {
+            set_obj['rules.$.action'] = rule.action;
+        }
+
+        return await Policy.findOneAndUpdate(
+            match_obj,
+            {
+                $set: set_obj
+            }, {
+                new: true,
+                upsert: true,
+                runValidators: true,
+                context: 'query'
+            }
+        );
     }
 };
 

@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.get('/', jwtTokenMW, ruleController.getRules);
 router.get('/:id', jwtTokenMW, ruleController.getRule);
+router.put('/:id', jwtTokenMW, ruleController.updateRule);
 
 export default router;
