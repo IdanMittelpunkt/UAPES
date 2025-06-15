@@ -13,7 +13,7 @@ const ruleController = {
      *  req.query['status']
      *  req.query['target.scope']
      *  req.query['target.id']
-     *  req.query['geography']
+     *  req.query['geographies']
      *  req.query['action.type']
      *  req.query['with_policy']
      */
@@ -27,7 +27,7 @@ const ruleController = {
             rule_status: req.query['status'],
             rule_target_scope: req.query['target.scope'],
             rule_target_id: req.query['target.id'],
-            rule_geography: req.query['geography'],
+            rule_geographies: req.query['geographies'],
             rule_action_type: req.query['action.type'],
             with_policy: req.query['with_policy']
         })

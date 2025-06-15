@@ -12,7 +12,7 @@ const ruleService = {
      *          rule_status - active/inactive
      *          rule_target_scope
      *          rule_target_id
-     *          rule_geography - array
+     *          rule_geographies - array
      *          rule_action_type - allow/deny
      * @returns {Promise<void>}
      */
@@ -57,9 +57,9 @@ const ruleService = {
             rule_match_obj['rules.target.id'] = query['rule_target_id'];
         }
 
-        if (query['rule_geography']) {
+        if (query['rule_geographies']) {
             rule_match_obj['rules.geographies'] = {
-                $in: query['rule_geography'].split(',')
+                $in: query['rule_geographies'].split(',')
             };
         }
 
