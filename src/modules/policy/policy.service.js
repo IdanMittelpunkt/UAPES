@@ -1,4 +1,4 @@
-import Policy from './policy.model.js';
+import { Policy } from './policy.model.js';
 
 const policyService = {
     /**

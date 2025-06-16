@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import RuleSchema from '../rule/rule.model.js';
+import { RuleSchema } from '../rule/rule.model.js';
 import Constants from '../../common/config/constants.js';
 
-const PolicySchema = new mongoose.Schema({
+export const PolicySchema = new mongoose.Schema({
     // policy schema version
     version: {
         type: "Number",
@@ -67,4 +67,4 @@ const PolicySchema = new mongoose.Schema({
     timestamps: true
 });
 
-export default mongoose.model('Policy', PolicySchema);
+export const Policy = mongoose.model('Policy', PolicySchema);

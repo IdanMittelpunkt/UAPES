@@ -1,4 +1,4 @@
-import Policy from '../policy/policy.model.js';
+import { Policy } from '../policy/policy.model.js';
 import mongoose from 'mongoose';
 const {ObjectId} = mongoose.Types;
 
@@ -17,6 +17,7 @@ const ruleService = {
      *          rule_target_id
      *          rule_geographies - array
      *          rule_action_type - allow/deny
+     *          rule_updatedat_since - javascript Date object
      * @returns {Promise<void>}
      */
     getRules: async (query) => {
@@ -74,6 +75,12 @@ const ruleService = {
             rule_match_obj['rules.action.type'] = query['rule_action_type'];
         }
 
+        if (query['rule_updatedat_since']) {
+            rule_match_obj['rules.updatedAt'] = {
+                $gte: query['rule_updatedat_since']
+            };
+        }
+
         aggregate_pipeline.push({
             $match: policy_match_obj
         });
@@ -91,12 +98,11 @@ const ruleService = {
     },
 
     /**
-     * Update a rule
+     * Updates a rule
      * @param query - object with these optional fields
      *          rule_id
      *          policy_tenantId
      * @param rule
-     * @returns {Promise<void>}
      */
     updateRule: async (query, rule) => {
         const match_obj = {
@@ -142,6 +148,31 @@ const ruleService = {
                 new: true,
                 runValidators: true,
                 context: 'query'
+            }
+        );
+    },
+    /**
+     * Deletes a rule
+     * @param query - object with these optional fields
+     *          rule_id
+     *          policy_tenantId
+     */
+    deleteRule: async (query) => {
+        const match_obj = {
+            'rules._id': new ObjectId(query['rule_id']),
+            'tenantId': query['policy_tenantId']
+        };
+        return await Policy.findOneAndUpdate(
+            match_obj,
+            {
+                $pull: {    // this will delete the rule from the policy
+                    rules: {
+                        _id: new ObjectId(query['rule_id'])
+                    }
+                }
+            },
+            {
+                new: true
             }
         );
     }

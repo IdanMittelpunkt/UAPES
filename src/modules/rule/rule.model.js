@@ -97,7 +97,7 @@ ConditionNodeSchema.add({
     }
 })
 
-const RuleSchema = new mongoose.Schema({
+export const RuleSchema = new mongoose.Schema({
     // rule schema version
     version: {
         type: "Number",
@@ -195,4 +195,4 @@ const RuleSchema = new mongoose.Schema({
     timestamps: true
 });
 
-export default RuleSchema;
+export const Rule = mongoose.model('Rule', RuleSchema);

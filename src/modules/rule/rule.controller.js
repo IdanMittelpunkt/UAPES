@@ -52,6 +52,8 @@ const ruleController = {
     }),
     /**
      * Update a rule
+     * Expecting:
+     *  req.params['id']
      */
     updateRule: asyncHandler(async (req, res) => {
         const rule = await ruleService.updateRule({
@@ -59,6 +61,44 @@ const ruleController = {
             policy_tenantId: req.app_context ? req.app_context[Constants.APPCONTEXT_TENANT_KEY] : undefined
         }, req.body)
         res.status(200).json(rule);
+    }),
+    /**
+     * Delete a rule
+     * Expecting:
+     *  req.params['id']
+     */
+    deleteRule: asyncHandler(async (req, res) => {
+        const rule = await ruleService.deleteRule({
+            rule_id: req.params.id,
+            policy_tenantId: req.app_context ? req.app_context[Constants.APPCONTEXT_TENANT_KEY] : undefined
+        })
+        if (rule) {
+            res.status(200).json({message: 'Rule deleted successfully.'});
+        } else {
+            // cannot be deleted because of various reasons, such as:
+            // Rule not found
+            // Rule deletion is forbidden because of tenant
+            // Rule deletion is forbidden because it leaves a policy without any rule
+            res.status(409).json({message: 'Rule cannot be deleted.'});
+        }
+
+    }),
+    /**
+     * Returns all rules updated since a given unixtimestamp
+     * Expecting:
+     *  req.query['updatedat_since'] - milliseconds since epoch
+     */
+    getRuleDiff: asyncHandler(async (req, res) => {
+        if ( ! req.query['updatedat_since'] ) {
+            res.status(400).json({message: 'Missing required parameter: updatedat_since'});
+        } else {
+            const rules = await ruleService.getRules({
+                policy_status: Constants.POLICY_STATUS_ACTIVE,
+                rule_status: Constants.RULE_STATUS_ACTIVE,
+                rule_updatedat_since: new Date(parseInt(req.query['updatedat_since'])),
+            })
+            res.json(rules);
+        }
     })
 };
 
