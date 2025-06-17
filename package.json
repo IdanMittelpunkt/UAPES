@@ -25,5 +25,10 @@
     "mongodb": "^6.17.0",
     "mongoose": "^8.15.2",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0",
+    "mongodb-memory-server": "^10.1.4",
+    "supertest": "^7.1.1"
   }
 }

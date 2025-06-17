@@ -1,0 +1,388 @@
+[
+    {
+        "version": 1,
+        "name": "test policy #1",
+        "description": "test policy #1 description",
+        "status": "active",
+        "author": "idan.mittelpunkt@gmail.com",
+        "tenantId": 15,
+        "rules": [
+            {
+                "version": 1,
+                "name": "test rule #1 of policy #1",
+                "description": "test rule #1 of policy #1 description",
+                "status": "active",
+                "author": "john.doe@gmail.com",
+                "priority": 1,
+                "target": {
+                    "scope": "group",
+                    "id": 100
+                },
+                "geographies": [
+                    "US",
+                    "DE",
+                    "IT"
+                ],
+                "condition": {
+                    "element_type": "node",
+                    "element": {
+                        "operator": "and",
+                        "operands": [
+                            {
+                                "element_type": "leaf",
+                                "element": {
+                                    "attribute": "destination_ip_address",
+                                    "operator": "starts_with",
+                                    "values": [
+                                        "192.168.127."
+                                    ]
+                                }
+                            },
+                            {
+                                "element_type": "node",
+                                "element": {
+                                    "operator": "or",
+                                    "operands": [
+                                        {
+                                            "element_type": "leaf",
+                                            "element": {
+                                                "attribute": "destination_protocol",
+                                                "operator": "eq",
+                                                "values": [
+                                                    "ftp"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "element_type": "leaf",
+                                            "element": {
+                                                "attribute": "destination_port",
+                                                "operator": "eq",
+                                                "values": [
+                                                    "21"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                "action": {
+                    "type": "deny"
+                }
+            }
+        ]
+    },
+    {
+        "version": 1,
+        "name": "test policy #2",
+        "description": "test policy #2 description",
+        "status": "active",
+        "author": "someone.something@gmail.com",
+        "tenantId": 15,
+        "rules": [
+            {
+                "version": 1,
+                "name": "test rule #3 of policy #2",
+                "description": "test rule #3 of policy #2 description",
+                "status": "active",
+                "author": "john.doe@gmail.com",
+                "priority": 1,
+                "target": {
+                    "scope": "group",
+                    "id": 200
+                },
+                "geographies": [
+                    "FR",
+                    "DE"
+                ],
+                "condition": {
+                    "element_type": "node",
+                    "element": {
+                        "operator": "and",
+                        "operands": [
+                            {
+                                "element_type": "leaf",
+                                "element": {
+                                    "attribute": "destination_ip_address",
+                                    "operator": "starts_with",
+                                    "values": [
+                                        "10.0.0."
+                                    ]
+                                }
+                            },
+                            {
+                                "element_type": "node",
+                                "element": {
+                                    "operator": "or",
+                                    "operands": [
+                                        {
+                                            "element_type": "leaf",
+                                            "element": {
+                                                "attribute": "destination_protocol",
+                                                "operator": "eq",
+                                                "values": [
+                                                    "http"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "element_type": "leaf",
+                                            "element": {
+                                                "attribute": "destination_port",
+                                                "operator": "eq",
+                                                "values": [
+                                                    "80"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                "action": {
+                    "type": "deny"
+                }
+            },
+            {
+                "version": 1,
+                "name": "test rule #4 of policy #2",
+                "description": "test rule #4 of policy #2 description",
+                "status": "inactive",
+                "author": "popeye.sailor@gmail.com",
+                "priority": 1,
+                "target": {
+                    "scope": "user",
+                    "id": "idan.mittelpunkt@gmail.com"
+                },
+                "geographies": [
+                    "IT",
+                    "US"
+                ],
+                "condition": {
+                    "element_type": "leaf",
+                    "element": {
+                        "attribute": "destination_domain",
+                        "operator": "ends_with",
+                        "values": [
+                            "google.com"
+                        ]
+                    }
+                },
+                "action": {
+                    "type": "allow"
+                }
+            }
+        ]
+    },
+    {
+        "version": 1,
+        "name": "test policy #3",
+        "description": "test policy #3 description",
+        "status": "inactive",
+        "author": "someone.something@gmail.com",
+        "tenantId": 15,
+        "rules": [
+            {
+                "version": 1,
+                "name": "test rule #5 of policy #3",
+                "description": "test rule #5 of policy #3 description",
+                "status": "active",
+                "author": "john.doe@gmail.com",
+                "priority": 1,
+                "target": {
+                    "scope": "group",
+                    "id": 200
+                },
+                "geographies": [
+                    "FR",
+                    "DE"
+                ],
+                "condition": {
+                    "element_type": "node",
+                    "element": {
+                        "operator": "and",
+                        "operands": [
+                            {
+                                "element_type": "leaf",
+                                "element": {
+                                    "attribute": "destination_ip_address",
+                                    "operator": "starts_with",
+                                    "values": [
+                                        "10.0.0."
+                                    ]
+                                }
+                            },
+                            {
+                                "element_type": "node",
+                                "element": {
+                                    "operator": "or",
+                                    "operands": [
+                                        {
+                                            "element_type": "leaf",
+                                            "element": {
+                                                "attribute": "destination_protocol",
+                                                "operator": "eq",
+                                                "values": [
+                                                    "http"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "element_type": "leaf",
+                                            "element": {
+                                                "attribute": "destination_port",
+                                                "operator": "eq",
+                                                "values": [
+                                                    "80"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                "action": {
+                    "type": "deny"
+                }
+            },
+            {
+                "version": 1,
+                "name": "test rule #6 of policy #3",
+                "description": "test rule #6 of policy #3 description",
+                "status": "inactive",
+                "author": "popeye.sailor@gmail.com",
+                "priority": 1,
+                "target": {
+                    "scope": "user",
+                    "id": "idan.mittelpunkt@gmail.com"
+                },
+                "geographies": [
+                    "IT",
+                    "US"
+                ],
+                "condition": {
+                    "element_type": "leaf",
+                    "element": {
+                        "attribute": "destination_domain",
+                        "operator": "ends_with",
+                        "values": [
+                            "google.com"
+                        ]
+                    }
+                },
+                "action": {
+                    "type": "allow"
+                }
+            }
+        ]
+    },
+    {
+        "version": 1,
+        "name": "test policy #4",
+        "description": "test policy #4 description",
+        "status": "active",
+        "author": "someone.something@gmail.com",
+        "tenantId": 25,
+        "rules": [
+            {
+                "version": 1,
+                "name": "test rule #7 of policy #4",
+                "description": "test rule #7 of policy #4 description",
+                "status": "active",
+                "author": "john.doe@gmail.com",
+                "priority": 3,
+                "target": {
+                    "scope": "tenant"
+                },
+                "geographies": [
+                    "FR",
+                    "DE"
+                ],
+                "condition": {
+                    "element_type": "node",
+                    "element": {
+                        "operator": "and",
+                        "operands": [
+                            {
+                                "element_type": "leaf",
+                                "element": {
+                                    "attribute": "destination_ip_address",
+                                    "operator": "starts_with",
+                                    "values": [
+                                        "10.0.0."
+                                    ]
+                                }
+                            },
+                            {
+                                "element_type": "node",
+                                "element": {
+                                    "operator": "or",
+                                    "operands": [
+                                        {
+                                            "element_type": "leaf",
+                                            "element": {
+                                                "attribute": "destination_protocol",
+                                                "operator": "eq",
+                                                "values": [
+                                                    "http"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "element_type": "leaf",
+                                            "element": {
+                                                "attribute": "destination_port",
+                                                "operator": "eq",
+                                                "values": [
+                                                    "80"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                "action": {
+                    "type": "deny"
+                }
+            },
+            {
+                "version": 1,
+                "name": "test rule #8 of policy #4",
+                "description": "test rule #8 of policy #4 description",
+                "status": "active",
+                "author": "popeye.sailor@gmail.com",
+                "priority": 5,
+                "target": {
+                    "scope": "global"
+                },
+                "geographies": [
+                    "US",
+                    "FR"
+                ],
+                "condition": {
+                    "element_type": "leaf",
+                    "element": {
+                        "attribute": "destination_domain",
+                        "operator": "ends_with",
+                        "values": [
+                            "microsoft.com"
+                        ]
+                    }
+                },
+                "action": {
+                    "type": "deny"
+                }
+            }
+        ]
+    }
+]
