@@ -1,4 +1,6 @@
 import { Policy } from '../policy/policy.model.js';
+import { State } from '../state/state.model.js';
+import Constants from '../../common/config/constants.js';
 import mongoose from 'mongoose';
 const {ObjectId} = mongoose.Types;
 
@@ -14,10 +16,10 @@ const ruleService = {
      *          rule_description - regex
      *          rule_status - active/inactive
      *          rule_target_scope
-     *          rule_target_id
      *          rule_geographies - array
      *          rule_action_type - allow/deny
      *          rule_updatedat_since - javascript Date object
+     *          rule_markedForDistribution - boolean
      * @returns {Promise<void>}
      */
     getRules: async (query) => {
@@ -61,13 +63,9 @@ const ruleService = {
             rule_match_obj['rules.target.scope'] = query['rule_target_scope'];
         }
 
-        if (query['rule_target_id']) {
-            rule_match_obj['rules.target.id'] = query['rule_target_id'];
-        }
-
         if (query['rule_geographies']) {
             rule_match_obj['rules.geographies'] = {
-                $in: query['rule_geographies'].split(',')
+                $in: query['rule_geographies']
             };
         }
 
@@ -79,6 +77,19 @@ const ruleService = {
             rule_match_obj['rules.updatedAt'] = {
                 $gte: query['rule_updatedat_since']
             };
+        }
+
+        if (query['rule_markedForDistribution']) {
+            if (Object.keys(rule_match_obj).length > 0) {
+                rule_match_obj = {
+                    $or: [
+                        rule_match_obj,
+                        {
+                            'rules.markedForDistribution': true
+                        }
+                    ]
+                }
+            }
         }
 
         aggregate_pipeline.push({
@@ -173,6 +184,134 @@ const ruleService = {
             },
             {
                 new: true
+            }
+        );
+    },
+    /**
+     * Distributes rules to agents via Websockets
+     */
+    distributeRules: async () => {
+
+        async function getLastRuleDistributionTimestamp() {
+            let the_state = await State.findOne({
+                type: Constants.RULE_LAST_DISTRIBUTION_TYPE
+            });
+            return the_state ? the_state.toObject().updatedAt : undefined;
+        }
+
+        async function updateLastRuleDistributionTimestamp(timestamp) {
+            await State.findOneAndUpdate(
+                {
+                    type: Constants.RULE_LAST_DISTRIBUTION_TYPE
+                },
+                [
+                    {
+                        $set: {
+                            updatedAt: timestamp
+                        }
+                    }
+                ],
+                {
+                    timestamps: false,
+                    new: true,
+                    upsert: true,
+                    setDefaultsOnInsert: true,
+                    runValidators: true
+                }
+            );
+        }
+
+        async function actualRuleDistribution(rules) {
+            if (rules && rules.length > 0) {
+                // TODO:
+                //  out of scope of this prototype as it involves more than a single HLD module !
+                //  probably since this task is CPU intensive it should be offloaded to a worker thread
+            }
+        }
+
+        const last_rule_distribution_timestamp = await getLastRuleDistributionTimestamp();
+        const current_timestamp = new Date(Date.now());
+        // calculate rules candidate for distribution
+        const rules = await ruleService.getRules({
+            policy_status: Constants.POLICY_STATUS_ACTIVE,
+            rule_status: Constants.RULE_STATUS_ACTIVE,
+            rule_updatedat_since: last_rule_distribution_timestamp ? last_rule_distribution_timestamp : new  Date(Date.now() - Constants.RULE_LAST_DISTRIBUTION_LOOKBACK_MINUTES * 60 * 1000),
+            rule_markedForDistribution: true
+        });
+        // distribute
+        await actualRuleDistribution(rules);
+        // clear any marked for distribution rules
+        await ruleService.unmarkRulesForDistribution();
+        // touch the timestamp after distribution is over
+        await updateLastRuleDistributionTimestamp(current_timestamp);
+    },
+    /**
+     * Marks rules for next rule distribution
+     * (without touching any parent document or sub-document's updatedAt).
+     * E.g., if a group changed then a rule addressing this group (directly or indirectly) should be distributed
+     */
+    markRulesForDistribution: async (group_id_array) => {
+        await Policy.updateMany(
+            {
+                'status': Constants.POLICY_STATUS_ACTIVE,
+                'rules.status': Constants.RULE_STATUS_ACTIVE,
+                'rules.target.id': {
+                    $in: group_id_array
+                },
+            },
+            [
+                {
+                    $set: {
+                        rules: {
+                            $map: {
+                                input: '$rules',
+                                as: 'rule',
+                                in: {
+                                    $cond: {
+                                        if: {
+                                            $and: [
+                                                {$eq: ['$$rule.status', Constants.RULE_STATUS_ACTIVE]},
+                                                {$in: ['$$rule.target.id', group_id_array]}
+                                            ]
+                                        },
+                                        then: {
+                                            $mergeObjects: [
+                                                '$$rule',
+                                                {
+                                                    'markedForDistribution': true
+                                                }
+                                            ]
+                                        },
+                                        else: '$$rule'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            { timestamps: false }
+        );
+    },
+    /**
+     * Unmarks rules for next rule distribution
+     * (without touching any parent document or sub-document's updatedAt).
+     */
+    unmarkRulesForDistribution: async () => {
+        await Policy.updateMany(
+            {
+                'rules.markedForDistribution': true
+            },
+            {
+               "$unset": {
+                    'rules.$[ruleElem].markedForDistribution': ''
+                }
+            },
+            {
+                arrayFilters: [
+                    { 'ruleElem.status': 'active', 'ruleElem.markedForDistribution': { $exists: true }}
+                ],
+                timestamps: false
             }
         );
     }

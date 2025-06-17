@@ -190,9 +190,11 @@ export const RuleSchema = new mongoose.Schema({
             },
             message: props => `${props.value} is not a valid email address.`
         }
+    },
+    markedForDistribution: {
+        type: Boolean
     }
 }, {
     timestamps: true
 });
 
-export const Rule = mongoose.model('Rule', RuleSchema);

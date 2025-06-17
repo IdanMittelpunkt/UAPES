@@ -28,7 +28,7 @@ const ruleController = {
             rule_status: req.query['status'],
             rule_target_scope: req.query['target.scope'],
             rule_target_id: req.query['target.id'],
-            rule_geographies: req.query['geographies'],
+            rule_geographies: req.query['geographies'].split(','),
             rule_action_type: req.query['action.type'],
             with_policy: req.query['with_policy']
         })
@@ -84,21 +84,20 @@ const ruleController = {
 
     }),
     /**
-     * Returns all rules updated since a given unixtimestamp
-     * Expecting:
-     *  req.query['updatedat_since'] - milliseconds since epoch
+     * Distributes all new/updated rules to live agents
      */
-    getRuleDiff: asyncHandler(async (req, res) => {
-        if ( ! req.query['updatedat_since'] ) {
-            res.status(400).json({message: 'Missing required parameter: updatedat_since'});
-        } else {
-            const rules = await ruleService.getRules({
-                policy_status: Constants.POLICY_STATUS_ACTIVE,
-                rule_status: Constants.RULE_STATUS_ACTIVE,
-                rule_updatedat_since: new Date(parseInt(req.query['updatedat_since'])),
-            })
-            res.json(rules);
-        }
+    distributeRules: asyncHandler(async (req, res) => {
+        const state = await ruleService.distributeRules();
+        res.status(200).json(state);
+    }),
+    /**
+     * mark rules for distribution
+     *  Expecting:
+     *      req.query['group_ids']
+     */
+    markRulesForDistribution: asyncHandler(async (req, res) => {
+        await ruleService.markRulesForDistribution(req.query['group_ids'].split(','));
+        res.status(200).json({message: 'Rules marked for distribution.'});
     })
 };
 

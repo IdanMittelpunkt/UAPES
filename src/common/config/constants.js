@@ -27,6 +27,8 @@ let constants = {
     POLICY_STATUS_INACTIVE: 'inactive',
     RULE_ACTION_ALLOW: 'allow',
     RULE_ACTION_DENY: 'deny',
+    RULE_LAST_DISTRIBUTION_TYPE: 'LastRuleDistributionTimestamp',
+    RULE_LAST_DISTRIBUTION_LOOKBACK_MINUTES: 10,
     RULE_SCOPE_USER: 'user',
     RULE_SCOPE_GROUP: 'group',
     RULE_SCOPE_TENANT: 'tenant',
