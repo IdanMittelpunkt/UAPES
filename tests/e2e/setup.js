@@ -15,6 +15,7 @@ export const __beforeAll = async () => {
             }
         });
         const mongoUri = mongoServer.getUri(Constants.DB_NAME);
+        console.log("MongoDB connection string: ", mongoUri);
 
         // connect to mongodb memory server
         await mongoose.connect(mongoUri);
@@ -35,12 +36,16 @@ export const __beforeAll = async () => {
 };
 
 export const __beforeEach = async () => {
-    Policy.deleteMany({});
+    await Policy.deleteMany({});
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     const policies = JSON.parse(
         readFileSync(join(__dirname, "/resources/full_db.json"), "utf8")
     );
-    Policy.insertMany(policies);
+    await Policy.insertMany(policies);
 }
+
+export const __afterAll = async () => {
+    await mongoose.connection.close();
+};

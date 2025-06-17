@@ -1,9 +1,9 @@
-import { __beforeAll, __beforeEach } from '../setup.js'
+import { __beforeAll, __beforeEach, __afterAll } from '../setup.js'
 import app from '../../../src/app.js';
 import request from 'supertest';
 
 
-describe('GET /policy', () => {
+describe('GET /policies', () => {
     beforeAll(async () => {
         await __beforeAll();
     });
@@ -11,6 +11,10 @@ describe('GET /policy', () => {
     beforeEach(async () => {
         await __beforeEach();
     });
+
+    afterAll(async () => {
+        await __afterAll();
+    })
 
     it('should be disallowed to call without a valid authentication header', async () => {
        await request(app)
