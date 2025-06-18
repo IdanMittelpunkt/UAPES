@@ -12,7 +12,7 @@ const router = express.Router();
 
 // Unauthenticated routes:
 router.get('/distribute', ruleController.distributeRules);    // called by a scheduled event AWS Lambda
-router.get('/distribute/mark', ruleController.markRulesForDistribution); // called indirectly by a scheduled event AWS Lambda
+router.post('/distribute/mark', ruleController.markRulesForDistribution); // called indirectly by a scheduled event AWS Lambda
 
 // Authenticated routes (with JWT):
 router.get('/', jwtTokenMW, ruleController.getRules);
