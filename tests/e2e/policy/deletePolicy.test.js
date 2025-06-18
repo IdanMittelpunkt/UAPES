@@ -2,9 +2,9 @@ import { __beforeAll, __beforeEach, __afterAll } from '../setup.js';
 import { Policy } from '../../../src/modules/policy/policy.model.js';
 import app from '../../../src/app.js';
 import request from 'supertest';
+import mongoose from "mongoose";
 
-
-describe('GET /policies/:id', () => {
+describe('DELETE /policies/:id', () => {
     beforeAll(async () => {
         await __beforeAll();
     });
@@ -18,10 +18,10 @@ describe('GET /policies/:id', () => {
     });
 
     it('should be disallowed to call without a valid authentication header', async () => {
-        const policyObj = await Policy.findOne({});
+        const policyObj = await Policy.findOne({tenantId: 15});
         const policyId = policyObj.toObject()._id.toString();
         await request(app)
-            .get(`/policies/${policyId}`)
+            .delete(`/policies/${policyId}`)
             .expect(401);
     });
 
@@ -29,42 +29,30 @@ describe('GET /policies/:id', () => {
         const policyObj = await Policy.findOne({tenantId: 15});
         const policyId = policyObj.toObject()._id.toString();
         await request(app)
-            .get(`/policies/${policyId}`)
+            .delete(`/policies/${policyId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .expect(200);
     });
 
-    it('should return a policy according to the specified id', async () => {
+    it('should delete the policy according to the specified id', async () => {
         const policyObj = await Policy.findOne({tenantId: 15});
         const policyId = policyObj.toObject()._id.toString();
-        const response = await request(app)
-            .get(`/policies/${policyId}`)
+        await request(app)
+            .delete(`/policies/${policyId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
-        expect(response.body._id).toBe(policyId);
+            .expect(200);
+        const againPolicyObj = await Policy.findOne({_id: new mongoose.Types.ObjectId(policyId)});
+        expect(againPolicyObj).toBeNull();
     });
 
-    it('should return an object of type Policy', async () => {
-        const policyObj = await Policy.findOne({tenantId: 15});
-        const policyId = policyObj.toObject()._id.toString();
-        const response = await request(app)
-            .get(`/policies/${policyId}`)
-            .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
-        const policy = new Policy(response.body);
-        try {
-            await policy.validateSync();
-            expect(true).toBe(true);
-        } catch (error) {
-            expect(true).toBe(false);
-        }
-    });
-
-    it('should not return a policy of a tenant that is not in the JWT', async () => {
+    it('should not delete a policy of a tenant that is not in the JWT', async () => {
         const policyObj = await Policy.findOne({tenantId: 25});
         const policyId = policyObj.toObject()._id.toString();
-        const response = await request(app)
-            .get(`/policies/${policyId}`)
+        await request(app)
+            .delete(`/policies/${policyId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .expect(404);
-        expect(response.body).toBeNull();
+        const againPolicyObj = await Policy.findOne({_id: new mongoose.Types.ObjectId(policyId)});
+        expect(againPolicyObj).not.toBeNull();
     });
 });

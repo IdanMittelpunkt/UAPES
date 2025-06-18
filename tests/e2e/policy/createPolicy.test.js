@@ -18,7 +18,7 @@ describe('POST /policies', () => {
 
     afterAll(async () => {
         await __afterAll();
-    })
+    });
 
     it('should be disallowed to call without a valid authentication header', async () => {
         await request(app)
@@ -154,6 +154,6 @@ describe('POST /policies', () => {
             .expect(201);
         expect(response.body.author).toEqual('idan.mittelpunkt@gmail.com');
         expect(response.body.rules[0].author).toEqual('idan.mittelpunkt@gmail.com');
-    })
+    });
 
 });

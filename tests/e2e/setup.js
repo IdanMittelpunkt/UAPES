@@ -6,10 +6,12 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import Constants from "../../src/common/config/constants.js";
 
+let mongoServer; // Declare a variable to hold the server instance
+
 export const __beforeAll = async () => {
     // create a mongodb memory server
     try {
-        const mongoServer = await MongoMemoryServer.create({
+        mongoServer = await MongoMemoryServer.create({
             instance: {
                 dbName: Constants.DB_NAME
             }
@@ -47,5 +49,11 @@ export const __beforeEach = async () => {
 }
 
 export const __afterAll = async () => {
-    await mongoose.connection.close();
+    if (mongoose.connection.readyState === 1) { // check if Mongoose is connected
+        await mongoose.disconnect();
+    }
+
+    if (mongoServer) {
+        await mongoServer.stop(); // stop the in-memory server
+    }
 };

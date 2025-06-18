@@ -15,7 +15,7 @@ describe('GET /policies', () => {
 
     afterAll(async () => {
         await __afterAll();
-    })
+    });
 
     it('should be disallowed to call without a valid authentication header', async () => {
        await request(app)
