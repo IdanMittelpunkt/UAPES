@@ -17,7 +17,6 @@ export const __beforeAll = async () => {
             }
         });
         const mongoUri = mongoServer.getUri(Constants.DB_NAME);
-        console.log("MongoDB connection string: ", mongoUri);
 
         // connect to mongodb memory server
         await mongoose.connect(mongoUri);
