@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "name": "test policy #1",
+  "description": "test policy #1 description",
+  "status": "active",
+  "author": "idan.mittelpunkt@gmail.com",
+  "tenantId": 15,
+  "rules": [
+    {
+      "version": 1,
+      "name": "test rule #1 of policy #1",
+      "description": "test rule #1 of policy #1 description",
+      "status": "active",
+      "author": "john.doe@gmail.com",
+      "priority": 1,
+      "target": {
+        "scope": "group",
+        "id": 100
+      },
+      "geographies": [
+        "US",
+        "DE",
+        "IT"
+      ],
+      "condition": {
+        "element_type": "node",
+        "element": {
+          "operator": "and",
+          "operands": [
+            {
+              "element_type": "leaf",
+              "element": {
+                "attribute": "destination_ip_address",
+                "operator": "starts_with",
+                "values": [
+                  "192.168.127."
+                ]
+              }
+            },
+            {
+              "element_type": "node",
+              "element": {
+                "operator": "or",
+                "operands": [
+                  {
+                    "element_type": "leaf",
+                    "element": {
+                      "attribute": "destination_protocol",
+                      "operator": "eq",
+                      "values": [
+                        "ftp"
+                      ]
+                    }
+                  },
+                  {
+                    "element_type": "leaf",
+                    "element": {
+                      "attribute": "destination_port",
+                      "operator": "eq",
+                      "values": [
+                        "21"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "action": {
+        "type": "deny"
+      }
+    }
+  ]
+}

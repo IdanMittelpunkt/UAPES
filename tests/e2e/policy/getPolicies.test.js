@@ -1,6 +1,7 @@
 import { __beforeAll, __beforeEach, __afterAll } from '../setup.js'
 import app from '../../../src/app.js';
 import request from 'supertest';
+import {Policy} from "../../../src/modules/policy/policy.model.js";
 
 
 describe('GET /policies', () => {
@@ -40,6 +41,25 @@ describe('GET /policies', () => {
             expect(policy.tenantId).not.toEqual('15');
         })
     });
+
+    it('should return an array of object of type Policy', async () => {
+        const response = await request(app)
+            .get('/policies')
+            .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
+
+        expect(response.body.length).toBeGreaterThan(0);
+
+        response.body.forEach(policy => {
+            const _policy = new Policy(policy);
+            try {
+                _policy.validateSync();
+                expect(true).toBe(true);
+            } catch (error) {
+                expect(true).toBe(false);
+            }
+        });
+    });
+
 
     it('should filter by status if specified', async () => {
         const response_active = await request(app)
