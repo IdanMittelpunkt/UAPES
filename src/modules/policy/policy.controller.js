@@ -2,14 +2,14 @@ import asyncHandler from "../../common/utils/asyncHandler.js";
 import policyService from "./policy.service.js";
 import Constants from "../../common/config/constants.js";
 
-const policyController = {
+export default {
     /**
      * Get Policies
      * Expecting:
-     *  req.query['status']
-     *  req.query['author']
-     *  req.query['tenantId']
-     *  req.query['with_rules']
+     *  req.query['status'] - active/inactive
+     *  req.query['author'] - email
+     *  req.query['tenantId'] - int
+     *  req.query['with_rules'] - true/false
      */
     getPolicies: asyncHandler(async (req, res) => {
         const policies = await policyService.getPolicies({
@@ -37,6 +37,8 @@ const policyController = {
     }),
     /**
      * Create a policy
+     * Expecting:
+     *  request body
      */
     createPolicy: asyncHandler(async (req, res) => {
         const newPolicy = await policyService.createPolicy({
@@ -62,5 +64,3 @@ const policyController = {
         }
     })
 };
-
-export default policyController;

@@ -107,10 +107,9 @@ const ruleService = {
 
         return await Policy.aggregate(aggregate_pipeline);
     },
-
     /**
      * Updates a rule
-     * @param query - object with these optional fields
+     * @param query - object with these optional fields:
      *          rule_id
      *          policy_tenantId
      * @param rule
@@ -169,8 +168,8 @@ const ruleService = {
         return retVal.rules[0];
     },
     /**
-     * Deletes a rule
-     * @param query - object with these optional fields
+     * Delete a rule
+     * @param query - object with these optional fields:
      *          rule_id
      *          policy_tenantId
      */
@@ -194,7 +193,7 @@ const ruleService = {
         );
     },
     /**
-     * Distributes rules to agents via Websockets
+     * Distribute rules to agents via Websockets
      */
     distributeRules: async () => {
 
@@ -232,6 +231,7 @@ const ruleService = {
                 // TODO:
                 //  out of scope of this prototype as it involves more than a single HLD module !
                 //  probably since this task is CPU intensive it should be offloaded to a worker thread
+                //  in order to free the event loop
             }
         }
 

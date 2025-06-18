@@ -5,13 +5,13 @@ import ruleController from './rule.controller.js';
 const router = express.Router();
 
 /*
-    We decided not to follow the pattern /policy/:id/rule/:id,
-    but instead to have /policy and /rule separately.
+    We decided not to follow the pattern /policies/:id/rules/:id,
+    but instead to have /policies and /rules separately.
     The reason was that the agent deals only with rules, without being aware of policies.
  */
 
 // Unauthenticated routes:
-router.get('/distribute', ruleController.distributeRules);    // called by a scheduled event AWS Lambda
+router.post('/distribute', ruleController.distributeRules);    // called by a scheduled event AWS Lambda
 router.post('/distribute/mark', ruleController.markRulesForDistribution); // called indirectly by a scheduled event AWS Lambda
 
 // Authenticated routes (with JWT):

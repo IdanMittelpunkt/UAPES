@@ -15,13 +15,13 @@ export const PolicySchema = new mongoose.Schema({
         type: "String",
         "required": true,
         trim: true,
-        maxlength: Constants.POLICY_NAME_MAX_LENGTH,
+        maxlength: Constants.POLICY_RULE_NAME_MAX_LENGTH,
     },
     // policy description
     description: {
         type: "String",
         trim: true,
-        maxlength: Constants.POLICY_DESCRIPTION_MAX_LENGTH,
+        maxlength: Constants.POLICY_RULE_DESCRIPTION_MAX_LENGTH,
     },
     // policy status
     status: {

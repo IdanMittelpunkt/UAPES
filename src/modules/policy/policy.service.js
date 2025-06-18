@@ -1,11 +1,11 @@
 import { Policy } from './policy.model.js';
 
-const policyService = {
+export default {
     /**
      * Get policies
      * @param query - object with these optional fields
      *          status - enum[active,inactive]
-     *          author - string
+     *          author - string (email)
      *          tenantId - int
      *          with_rules - boolean
      *
@@ -42,10 +42,9 @@ const policyService = {
 
         return await Policy.aggregate(aggregate_pipeline);
     },
-
     /**
      * Get policy by identifier
-     * @param query - object with these optional fields
+     * @param query - object with these optional fields:
      *          tenantId - int
      *          id - int
      */
@@ -64,7 +63,7 @@ const policyService = {
     },
     /**
      * Create a new policy
-     * @param query - object with these optional fields
+     * @param query - object with these optional fields:
      *          tenantId
      *          author
      * @param policy
@@ -86,7 +85,7 @@ const policyService = {
     },
     /**
      * Delete a policy
-     * @param query - object with these optional fields
+     * @param query - object with these optional fields:
      *          tenantId
      *          id
      */
@@ -104,5 +103,3 @@ const policyService = {
         return await Policy.deleteOne(match_obj);
     }
 };
-
-export default policyService;

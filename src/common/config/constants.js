@@ -1,38 +1,60 @@
 /*
-    we need to initiatlize first, or otherwise we won't be able to have self reference, as in:
+    we need to initiatlize first, or otherwise we won't be able to have self references, as in:
     constants = {
         SOMETHING: constants.SOMETHING_ELSE
     }
  */
 let constants = {
+    // the app context object key of the tenant ID (stems from the JWT token)
     APPCONTEXT_TENANT_KEY: 'tenant',
+    // the app context object key of the user (his/her email address) (stems from the JWT token)
     APPCONETXT_USER_KEY: 'sub',
+    // the following constants are attributes used in rule conditions:
+    // ===============================================================
     ATTRIBUTE_SOURCE_IP_ADDRESS: 'source_ip_address',
     ATTRIBUTE_DESTINATION_IP_ADDRESS: 'destination_ip_address',
     ATTRIBUTE_DESTINATION_PORT: 'destination_port',
     ATTRIBUTE_DESTINATION_DOMAIN: 'destination_domain',
     ATTRIBUTE_DESTINATION_PROTOCOL: 'destination_protocol',
+
+    AUTHORIZATION_HEADER_NAME: 'authorization',
+    AUTHORIZATION_HEADER_BEARER_PREFIX: 'Bearer',
+    // the following constants are operators used in building boolean expressions (for conditions):
+    // ============================================================================================
     BOOLEAN_OPERATOR_AND: 'and',
     BOOLEAN_OPERATOR_NOT: 'not',
     BOOLEAN_OPERATOR_OR: 'or',
+    // the following constants are boolean *strings* accepted as query parameter values:
+    // =================================================================================
     BOOLEAN_VALUE_TRUE: 'true',
     BOOLEAN_VALUE_FALSE: 'false',
-    COLLECTION_NAME: 'policies',
+    // the mongoDB database name
     DB_NAME: 'rules',
+    // the boolean expressions (for rule conditions) are composed of either a leaf or a node:
     ELEMENT_TYPE_LEAF: 'leaf',
     ELEMENT_TYPE_NODE: 'node',
-    POLICY_DESCRIPTION_MAX_LENGTH: 1000,
-    POLICY_NAME_MAX_LENGTH: 100,
+    POLICY_RULE_DESCRIPTION_MAX_LENGTH: 1000,
+    POLICY_RULE_NAME_MAX_LENGTH: 100,
+    // valid policy status values:
+    // ===========================
     POLICY_STATUS_ACTIVE: 'active',
     POLICY_STATUS_INACTIVE: 'inactive',
+    // valid rule action types:
+    // ========================
     RULE_ACTION_ALLOW: 'allow',
     RULE_ACTION_DENY: 'deny',
+    // The name of the stored "parameter" of the previous time we had rule distribution
     RULE_LAST_DISTRIBUTION_TYPE: 'LastRuleDistributionTimestamp',
+    // upon first time, where the stored "parameter" above does not exist, we distribute rules of the last X minutes...
     RULE_LAST_DISTRIBUTION_LOOKBACK_MINUTES: 10,
+    // rule target scopes:
+    // ===================
     RULE_SCOPE_USER: 'user',
     RULE_SCOPE_GROUP: 'group',
     RULE_SCOPE_TENANT: 'tenant',
     RULE_SCOPE_GLOBAL: 'global',
+    // valid rule status values:
+    // =========================
     RULE_STATUS_ACTIVE: 'active',
     RULE_STATUS_INACTIVE: 'inactive',
 }

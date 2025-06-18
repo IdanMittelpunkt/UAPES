@@ -73,7 +73,7 @@ describe('POST /policies', () => {
 
         // invalid name field
         policy = JSON.parse(fileContent);
-        policy.name = generateRandomString(Constants.POLICY_NAME_MAX_LENGTH + 1);
+        policy.name = generateRandomString(Constants.POLICY_RULE_NAME_MAX_LENGTH + 1);
         await request(app)
             .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
@@ -82,7 +82,7 @@ describe('POST /policies', () => {
 
         // invalid description field
         policy = JSON.parse(fileContent);
-        policy.description = generateRandomString(Constants.POLICY_DESCRIPTION_MAX_LENGTH + 1);
+        policy.description = generateRandomString(Constants.POLICY_RULE_DESCRIPTION_MAX_LENGTH + 1);
         await request(app)
             .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)

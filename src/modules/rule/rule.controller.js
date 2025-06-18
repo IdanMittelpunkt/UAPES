@@ -2,7 +2,7 @@ import asyncHandler from "../../common/utils/asyncHandler.js";
 import ruleService from "./rule.service.js";
 import Constants from "../../common/config/constants.js";
 
-const ruleController = {
+export default {
     /**
      * Get rules
      * Expecting:
@@ -16,7 +16,6 @@ const ruleController = {
      *  req.query['target.id']
      *  req.query['geographies']
      *  req.query['action.type']
-     *  req.query['with_policy']
      */
     getRules: asyncHandler(async (req, res) => {
         const rules = await ruleService.getRules({
@@ -83,21 +82,20 @@ const ruleController = {
 
     }),
     /**
-     * Distributes all new/updated rules to live agents
+     * Distribute all new/updated rules to live agents
      */
     distributeRules: asyncHandler(async (req, res) => {
         const state = await ruleService.distributeRules();
         res.status(200).json(state);
     }),
     /**
-     * mark rules for distribution
+     * Mark rules for distribution
+     * Relevant when a group of users (from the IdP) referenced in a rule was modified
      *  Expecting:
-     *      req.query['group_ids']
+     *      req.query['group_ids'] (e.g. '100,200,300,400')
      */
     markRulesForDistribution: asyncHandler(async (req, res) => {
         await ruleService.markRulesForDistribution(req.query['group_ids'].split(','));
         res.status(200).json({message: 'Rules marked for distribution.'});
     })
 };
-
-export default ruleController;

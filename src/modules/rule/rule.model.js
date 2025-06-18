@@ -110,13 +110,13 @@ export const RuleSchema = new mongoose.Schema({
         type: "String",
         "required": true,
         trim: true,
-        maxlength: 100
+        maxlength: Constants.POLICY_RULE_NAME_MAX_LENGTH
     },
     // rule description
     description: {
         type: "String",
         trim: true,
-        maxlength: 1000
+        maxlength: Constants.POLICY_RULE_DESCRIPTION_MAX_LENGTH
     },
     // rule status
     status: {
@@ -191,6 +191,8 @@ export const RuleSchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid email address.`
         }
     },
+    // optional field to mark that the rule MUST be distributed in the next rule distribution
+    // but not because it was modified since the previous rule distribution
     markedForDistribution: {
         type: Boolean
     }

@@ -1,5 +1,6 @@
 import config from '../config/external.js';
 import jwt  from 'jsonwebtoken';
+import Constants from '../config/constants.js';
 
 /**
  * A middleware to validate JWT token, and set its content as an app context in the request
@@ -10,13 +11,13 @@ import jwt  from 'jsonwebtoken';
  */
 const validateJWT = (req, res, next)  => {
     // get auth header value
-    const authHeader = req.headers['authorization'];
+    const authHeader = req.headers[Constants.AUTHORIZATION_HEADER_NAME];
     // get JWT secret of the platform, assumed to be an environment variable
     const JWT_SECRET = config.jwtSecret;
 
     if (typeof authHeader !== 'undefined') {  // if not found HTTP authorization header...
         const headerValueSplits = authHeader.split(' ');
-        if ( (headerValueSplits.length === 2) && (headerValueSplits[0] === 'Bearer') ) { // if invalid structure of authorization header...
+        if ( (headerValueSplits.length === 2) && (headerValueSplits[0] === Constants.AUTHORIZATION_HEADER_BEARER_PREFIX) ) { // if invalid structure of authorization header...
             const jwtToken = headerValueSplits[1];
             // verify the signature and validity of the JWT token
             jwt.verify(jwtToken, JWT_SECRET, (err, authData) => {
