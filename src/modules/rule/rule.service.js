@@ -124,43 +124,49 @@ const ruleService = {
         let set_obj = {};
 
         if (rule.name) {
-            set_obj['rules.$.name'] = rule.name;
+            set_obj['name'] = rule.name;
         }
 
         if (rule.description) {
-            set_obj['rules.$.description'] = rule.description;
+            set_obj['description'] = rule.description;
         }
 
         if (rule.status) {
-            set_obj['rules.$.status'] = rule.status;
+            set_obj['status'] = rule.status;
         }
 
         if (rule.target) {
-            set_obj['rules.$.target'] = rule.target;
+            set_obj['target'] = rule.target;
         }
 
         if (rule.geographies) {
-            set_obj['rules.$.geographies'] = rule.geographies;
+            set_obj['geographies'] = rule.geographies;
         }
 
         if (rule.condition) {
-            set_obj['rules.$.condition'] = rule.condition;
+            set_obj['condition'] = rule.condition;
         }
 
         if (rule.action) {
-            set_obj['rules.$.action'] = rule.action;
+            set_obj['action'] = rule.action;
         }
 
-        return await Policy.findOneAndUpdate(
+        await Policy.findOneAndUpdate(
             match_obj,
             {
-                $set: set_obj
+                $set: Object.fromEntries(
+                    Object.entries(set_obj).map(([key, value]) => [`rules.$[elem].${key}`, value])
+                )
             }, {
-                new: true,
-                runValidators: true,
-                context: 'query'
+                arrayFilters: [{ "elem._id": new ObjectId(query['rule_id'])}]
             }
         );
+
+        const retVal = await Policy.findOne(
+            match_obj,
+            { "rules.$": 1}
+        );
+        return retVal.rules[0];
     },
     /**
      * Deletes a rule
