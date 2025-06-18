@@ -1,7 +1,7 @@
 {
   "name": "uapes",
   "version": "1.0.0",
-  "description": "",
+  "description": "An architect home assignment by Check Point",
   "main": "/src/server.js",
   "type": "module",
   "scripts": {
@@ -14,7 +14,7 @@
     "url": "git+https://github.com/IdanMittelpunkt/UAPES.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "idan.mittelpunkt@gmail.com",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/IdanMittelpunkt/UAPES/issues"
