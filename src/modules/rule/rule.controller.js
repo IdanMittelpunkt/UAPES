@@ -28,9 +28,8 @@ const ruleController = {
             rule_status: req.query['status'],
             rule_target_scope: req.query['target.scope'],
             rule_target_id: req.query['target.id'],
-            rule_geographies: req.query['geographies'].split(','),
-            rule_action_type: req.query['action.type'],
-            with_policy: req.query['with_policy']
+            rule_geographies: req.query['geographies'] ? req.query['geographies'].split(',') : undefined,
+            rule_action_type: req.query['action.type']
         })
         res.json(rules);
     }),
