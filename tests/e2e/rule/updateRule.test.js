@@ -5,7 +5,7 @@ import app from '../../../src/app.js';
 import request from 'supertest';
 import mongoose from "mongoose";
 
-describe('PUT /rules/:id', () => {
+describe('PATCH /rules/:id', () => {
     beforeAll(async () => {
         await __beforeAll();
     });
@@ -22,7 +22,7 @@ describe('PUT /rules/:id', () => {
         const policyObj = await Policy.findOne({tenantId: 15});
         const ruleId = policyObj.toObject().rules[0].id;
         await request(app)
-            .put(`/rules/${ruleId}`)
+            .patch(`/rules/${ruleId}`)
             .expect(401);
     });
 
@@ -30,7 +30,7 @@ describe('PUT /rules/:id', () => {
         const policyObj = await Policy.findOne({tenantId: 15});
         const rule = policyObj.toObject().rules[0];
         await request(app)
-            .put(`/rules/${rule.id}`)
+            .patch(`/rules/${rule.id}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(rule)
             .expect(200);
@@ -41,7 +41,7 @@ describe('PUT /rules/:id', () => {
         const rule = policyObj.toObject().rules[0];
         rule.name = 'something I just came up with';
         await request(app)
-            .put(`/rules/${rule.id}`)
+            .patch(`/rules/${rule.id}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(rule)
             .expect(200);
@@ -64,7 +64,7 @@ describe('PUT /rules/:id', () => {
 
         const ruleId = "abcdefabcdefabcdefabcdef";
         const response = await request(app)
-            .put(`/rules/${ruleId}`)
+            .patch(`/rules/${ruleId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(rule);
         expect(response.statusCode).toBe(404);
@@ -76,7 +76,7 @@ describe('PUT /rules/:id', () => {
         const rule = policyObj.toObject().rules[0];
         rule.name = 'something I just came up with';
         const response = await request(app)
-            .put(`/rules/${rule.id}`)
+            .patch(`/rules/${rule.id}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(rule);
         const ruleObj = new Rule(response.body);

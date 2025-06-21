@@ -17,7 +17,7 @@ router.post('/distribute/mark', ruleController.markRulesForDistribution); // cal
 // Authenticated routes (with JWT):
 router.get('/', jwtTokenMW, ruleController.getRules);
 router.get('/:id', jwtTokenMW, ruleController.getRule);
-router.put('/:id', jwtTokenMW, ruleController.updateRule);
+router.patch('/:id', jwtTokenMW, ruleController.updateRule);
 router.delete('/:id', jwtTokenMW, ruleController.deleteRule);
 
 

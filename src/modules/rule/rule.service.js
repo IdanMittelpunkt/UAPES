@@ -159,6 +159,11 @@ const ruleService = {
 
         let set_obj = {};
 
+        if (rule.priority) {
+            set_obj['priority'] = rule.priority;
+        }
+
+
         if (rule.name) {
             set_obj['name'] = rule.name;
         }
@@ -194,12 +199,13 @@ const ruleService = {
                     Object.entries(set_obj).map(([key, value]) => [`rules.$[elem].${key}`, value])
                 )
             }, {
-                arrayFilters: [{ "elem._id": new ObjectId(query['rule_id'])}]
+                arrayFilters: [{ "elem._id": new ObjectId(query['id'])}],
+                new: true
             }
         );
 
         return policy.rules
-            .filter(rule => rule._id.toString() === query['id'])[0].toObject();
+            .filter(_rule => _rule._id.toString() === query['id'])[0].toObject();
     },
     /**
      * Delete a rule
