@@ -4,7 +4,7 @@ import { State } from '../state/state.model.js';
 import Constants from '../../common/config/constants.js';
 import mongoose from 'mongoose';
 const {ObjectId} = mongoose.Types;
-import { NotFoundCustomError, ForbiddenCustomError } from '../../common/errors/customErrors.js';
+import { NotFoundCustomError, ForbiddenCustomError, ConflictCustomError } from '../../common/errors/customErrors.js';
 
 const ruleService = {
     /**
@@ -226,6 +226,9 @@ const ruleService = {
         } else {
             if (policy.tenantId !== query['policy_tenantId']) {
                 throw new ForbiddenCustomError();
+            }
+            if (policy.rules.length === 1) {
+                throw new ConflictCustomError();
             }
         }
         await Policy.findOneAndUpdate(

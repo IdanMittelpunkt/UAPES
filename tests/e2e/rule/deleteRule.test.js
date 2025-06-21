@@ -26,7 +26,7 @@ describe('DELETE /rules/:id', () => {
     });
 
     it('should be allowed to call with a valid authentication header', async () => {
-        const policyObj = await Policy.findOne({tenantId: 15});
+        const policyObj = await Policy.findOne({tenantId: 15, name: "test policy #2"});
         const ruleId = policyObj.toObject().rules[0].id;
         await request(app)
             .delete(`/rules/${ruleId}`)
@@ -35,7 +35,7 @@ describe('DELETE /rules/:id', () => {
     });
 
     it('should delete the rules according to the specified id', async () => {
-        const policyObj = await Policy.findOne({tenantId: 15});
+        const policyObj = await Policy.findOne({tenantId: 15, name: "test policy #2"});
         const ruleId = policyObj.toObject().rules[0].id;
         const response = await request(app)
             .delete(`/rules/${ruleId}`)
@@ -65,5 +65,15 @@ describe('DELETE /rules/:id', () => {
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN);
         expect(response.status).toBe(404);
         expect(response.text).toEqual("");
-    })
+    });
+
+    it('should not delete a rule which is the last one of a policy', async () => {
+        const policyObj = await Policy.findOne({tenantId: 15, name: "test policy #1 "});
+        const ruleId = policyObj.toObject().rules[0].id;
+        const response = await request(app)
+            .delete(`/rules/${ruleId}`)
+            .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
+        expect(response.status).toBe(409);
+        expect(response.text).toEqual("");
+    });
 })

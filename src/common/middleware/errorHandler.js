@@ -1,4 +1,9 @@
-import { ForbiddenCustomError, NotFoundCustomError, ValidationCustomError } from '../errors/customErrors.js';
+import {
+  ConflictCustomError,
+  ForbiddenCustomError,
+  NotFoundCustomError,
+  ValidationCustomError
+} from '../errors/customErrors.js';
 import { Error as MongooseError }  from 'mongoose';
 const { ValidationError } = MongooseError;
 
@@ -17,6 +22,9 @@ export const errorHandler = (err, req, res, next) => {
   }
   if (err instanceof NotFoundCustomError) {
     return res.status(404).json();
+  }
+  if (err instanceof ConflictCustomError) {
+    return res.status(409).json();
   }
 
   res.status(500).json();
