@@ -5,6 +5,7 @@ import { dirname, join } from "path";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import Constants from "../../../src/common/config/constants.js";
+import {Policy} from "../../../src/modules/policy/policy.model.js";
 
 
 describe('POST /policies', () => {
@@ -27,10 +28,14 @@ describe('POST /policies', () => {
     });
 
     it('should be allowed to call with a valid authentication header', async () => {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const fileContent = readFileSync(join(__dirname, "../resources/valid_policy.json"), "utf8");
         await request(app)
-            .get('/policies')
+            .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
-            .expect(200);
+            .send(JSON.parse(fileContent))
+            .expect(201);
     });
 
     it('should accept a valid policy', async () => {
@@ -61,62 +66,88 @@ describe('POST /policies', () => {
         const fileContent = readFileSync(join(__dirname, "../resources/valid_policy.json"), "utf8");
 
         let policy;
+        let response;
 
         // invalid version field
         policy = JSON.parse(fileContent);
         policy.version = 'some invalid version';
-        await request(app)
+        response = await request(app)
             .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(policy)
-            .expect(500);
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual("")
 
         // invalid name field
         policy = JSON.parse(fileContent);
         policy.name = generateRandomString(Constants.POLICY_RULE_NAME_MAX_LENGTH + 1);
-        await request(app)
+        response = await request(app)
             .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(policy)
-            .expect(500);
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual("")
 
         // invalid description field
         policy = JSON.parse(fileContent);
         policy.description = generateRandomString(Constants.POLICY_RULE_DESCRIPTION_MAX_LENGTH + 1);
-        await request(app)
+        response = await request(app)
             .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(policy)
-            .expect(500);
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual("")
+
 
         // invalid status field
         policy = JSON.parse(fileContent);
         policy.status = 'some invalid status';
-        await request(app)
+        response = await request(app)
             .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(policy)
-            .expect(500);
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual("")
 
         // invalid rules field - empty array
         policy = JSON.parse(fileContent);
         policy.rules = [];
-        await request(app)
+        response = await request(app)
             .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(policy)
-            .expect(500);
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual("")
+
 
         // invalid rules field - invalid rule
         policy = JSON.parse(fileContent);
         policy.rules[0].target.scope = 'some invalid scope';
-        await request(app)
+        response = await request(app)
             .post('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(policy)
-            .expect(500);
-
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual("")
     });
+
+    it('should return an object of type Policy', async () => {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const fileContent = readFileSync(join(__dirname, "../resources/valid_policy.json"), "utf8");
+        const response = await request(app)
+            .post('/policies')
+            .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
+            .send(JSON.parse(fileContent))
+            .expect(201)
+        const policyObj = new Policy(response.body);
+        try {
+            await policyObj.validateSync();
+            expect(true).toBe(true);
+        } catch (error) {
+            expect(true).toBe(false);
+        }
+    })
 
     it('should ignore tenantId if specified but contradicts the JWT', async () => {
         const __filename = fileURLToPath(import.meta.url);
@@ -152,8 +183,8 @@ describe('POST /policies', () => {
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(policy)
             .expect(201);
-        expect(response.body.author).toEqual('idan.mittelpunkt@gmail.com');
-        expect(response.body.rules[0].author).toEqual('idan.mittelpunkt@gmail.com');
+        expect(response.body.author).toEqual('idan.mittelpunkt@gmail.com'); // policy level
+        expect(response.body.rules[0].author).toEqual('idan.mittelpunkt@gmail.com'); // rule level
     });
 
 });

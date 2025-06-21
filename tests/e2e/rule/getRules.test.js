@@ -1,8 +1,7 @@
 import { __beforeAll, __beforeEach, __afterAll } from '../setup.js'
 import app from '../../../src/app.js';
 import request from 'supertest';
-import { RuleSchema } from "../../../src/modules/rule/rule.model.js";
-import mongoose from 'mongoose';
+import { Rule } from "../../../src/modules/rule/rule.model.js";
 import Constants from "../../../src/common/config/constants.js";
 
 
@@ -36,7 +35,6 @@ describe('GET /rules', () => {
         const response = await request(app)
             .get('/rules')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN);
-        const Rule = mongoose.model('Rule', RuleSchema);
         const rules = response.body;
         expect(rules.length).toBeGreaterThan(0);
         rules.forEach(rule => {

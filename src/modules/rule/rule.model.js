@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Constants from '../../common/config/constants.js';
+import mongooseToJS from "../../common/plugins/mongooseToJS.js";
 
 // a schema common to both condition tree node or leaf
 const ConditionBaseSchema = new mongoose.Schema(
@@ -199,4 +200,10 @@ export const RuleSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+export const Rule = mongoose.model('Rule', RuleSchema);
+
+RuleSchema.plugin(mongooseToJS);
+
+
 

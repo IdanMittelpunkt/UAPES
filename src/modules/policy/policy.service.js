@@ -1,6 +1,9 @@
 import { Policy } from './policy.model.js';
+import { ForbiddenCustomError, NotFoundCustomError, ValidationCustomError } from "../../common/errors/customErrors.js";
+import mongoose from "mongoose";
+const { ObjectId } = mongoose.Types;
 
-export default {
+const PolicyService = {
     /**
      * Get policies
      * @param query - object with these optional fields
@@ -40,7 +43,10 @@ export default {
             aggregate_pipeline.push({$project: project_obj});
         }
 
-        return await Policy.aggregate(aggregate_pipeline);
+        const policies =  await Policy.aggregate(aggregate_pipeline);
+        return policies.map(policy => {
+            return new Policy(policy).toObject();
+        });
     },
     /**
      * Get policy by identifier
@@ -49,17 +55,17 @@ export default {
      *          id - int
      */
     getPolicyById: async (query) => {
-        let match_obj = {};
+        const policy = await Policy.findOne({ _id: new ObjectId(query['id']) });
 
-        if (query.id) {
-            match_obj['_id'] = query.id;
+        if (policy && policy.tenantId) {
+            if (policy.tenantId !== query.tenantId) {
+                throw new ForbiddenCustomError();
+            } else {
+                return policy.toObject();
+            }
+        } else {
+            throw new NotFoundCustomError();
         }
-
-        if (query.tenantId) {
-            match_obj['tenantId'] = query.tenantId;
-        }
-
-        return await Policy.findOne(match_obj);
     },
     /**
      * Create a new policy
@@ -81,7 +87,15 @@ export default {
             rule.author = query['author'];
         })
 
-        return await newPolicy.save();
+        try {
+            await newPolicy.validateSync()
+        } catch (error) {
+            console.log(error);
+            throw new ValidationCustomError();
+        }
+
+        await newPolicy.save();
+        return newPolicy.toObject();
     },
     /**
      * Delete a policy
@@ -90,6 +104,9 @@ export default {
      *          id
      */
     deletePolicy: async (query) => {
+        // we need this to maybe throw error if the access to the policy is denied
+        await PolicyService.getPolicyById({id: query.id, tenantId: query.tenantId});
+
         let match_obj = {};
 
         if (query.id) {
@@ -100,6 +117,15 @@ export default {
             match_obj['tenantId'] = query.tenantId;
         }
 
-        return await Policy.deleteOne(match_obj);
+        const result = await Policy.deleteOne(match_obj);
+        if (result) {
+            if (result.deletedCount === 1) {
+                return true;
+            } else {
+                throw new NotFoundCustomError();
+            }
+        }
     }
 };
+
+export default PolicyService;

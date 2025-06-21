@@ -1,8 +1,10 @@
 import { Policy } from '../policy/policy.model.js';
+import { Rule } from './rule.model.js';
 import { State } from '../state/state.model.js';
 import Constants from '../../common/config/constants.js';
 import mongoose from 'mongoose';
 const {ObjectId} = mongoose.Types;
+import { NotFoundCustomError, ForbiddenCustomError } from '../../common/errors/customErrors.js';
 
 const ruleService = {
     /**
@@ -105,18 +107,53 @@ const ruleService = {
             $replaceWith: '$rules'
         });
 
-        return await Policy.aggregate(aggregate_pipeline);
+        const rules = await Policy.aggregate(aggregate_pipeline);
+        return rules.map(rule => {
+            return new Rule(rule).toObject();
+        });
+    },
+    /**
+     * Gets a rule
+     * @param query - object with these optional fields:
+     *          tenantId - int
+     *          id - int
+     */
+    getRuleById: async (query) => {
+        const policy = await Policy.findOne({ "rules._id": new ObjectId(query['id'])});
+        if (policy) {
+            if (policy.tenantId !== query['tenantId']) {
+                throw new ForbiddenCustomError();
+            } else {
+                return policy.rules
+                    .filter(rule => rule._id.toString() === query['id'])[0].toObject();
+            }
+        } else {
+            throw new NotFoundCustomError();
+        }
     },
     /**
      * Updates a rule
      * @param query - object with these optional fields:
-     *          rule_id
+     *          id
      *          policy_tenantId
      * @param rule
      */
     updateRule: async (query, rule) => {
+
+        let policy = await Policy.findOne({ "rules._id": new ObjectId(query['id']) });
+
+        if (policy) {
+            if (policy.tenantId !== query['policy_tenantId']) {
+                throw new ForbiddenCustomError();
+            } else {
+
+            }
+        } else {
+            throw new NotFoundCustomError();
+        }
+
         const match_obj = {
-            'rules._id': new ObjectId(query['rule_id']),
+            'rules._id': new ObjectId(query['id']),
             'tenantId': query['policy_tenantId']
         };
 
@@ -150,7 +187,7 @@ const ruleService = {
             set_obj['action'] = rule.action;
         }
 
-        await Policy.findOneAndUpdate(
+        policy = await Policy.findOneAndUpdate(
             match_obj,
             {
                 $set: Object.fromEntries(
@@ -161,11 +198,8 @@ const ruleService = {
             }
         );
 
-        const retVal = await Policy.findOne(
-            match_obj,
-            { "rules.$": 1}
-        );
-        return retVal.rules[0];
+        return policy.rules
+            .filter(rule => rule._id.toString() === query['id'])[0].toObject();
     },
     /**
      * Delete a rule
@@ -178,7 +212,17 @@ const ruleService = {
             'rules._id': new ObjectId(query['rule_id']),
             'tenantId': query['policy_tenantId']
         };
-        return await Policy.findOneAndUpdate(
+        let policy = await Policy.findOne({
+            'rules._id': new ObjectId(query['rule_id']),
+        });
+        if (!policy) {
+            throw new NotFoundCustomError();
+        } else {
+            if (policy.tenantId !== query['policy_tenantId']) {
+                throw new ForbiddenCustomError();
+            }
+        }
+        await Policy.findOneAndUpdate(
             match_obj,
             {
                 $pull: {    // this will delete the rule from the policy
@@ -191,6 +235,7 @@ const ruleService = {
                 new: true
             }
         );
+        return true;
     },
     /**
      * Distribute rules to agents via Websockets

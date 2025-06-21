@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { RuleSchema } from '../rule/rule.model.js';
 import Constants from '../../common/config/constants.js';
+import mongooseToJS from '../../common/plugins/mongooseToJS.js';
 
 export const PolicySchema = new mongoose.Schema({
     // policy schema version
@@ -66,5 +67,7 @@ export const PolicySchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+PolicySchema.plugin(mongooseToJS);
 
 export const Policy = mongoose.model('Policy', PolicySchema);

@@ -1,6 +1,6 @@
 import { __beforeAll, __beforeEach, __afterAll } from '../setup.js';
 import { Policy } from '../../../src/modules/policy/policy.model.js';
-import { RuleSchema } from '../../../src/modules/rule/Rule.model.js';
+import { Rule } from '../../../src/modules/rule/rule.model.js';
 import app from '../../../src/app.js';
 import request from 'supertest';
 import mongoose from "mongoose";
@@ -20,7 +20,7 @@ describe('PUT /rules/:id', () => {
 
     it('should be disallowed to call without a valid authentication header', async () => {
         const policyObj = await Policy.findOne({tenantId: 15});
-        const ruleId = policyObj.toObject().rules[0]._id.toString();
+        const ruleId = policyObj.toObject().rules[0].id;
         await request(app)
             .put(`/rules/${ruleId}`)
             .expect(401);
@@ -30,7 +30,7 @@ describe('PUT /rules/:id', () => {
         const policyObj = await Policy.findOne({tenantId: 15});
         const rule = policyObj.toObject().rules[0];
         await request(app)
-            .put(`/rules/${rule._id.toString()}`)
+            .put(`/rules/${rule.id}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(rule)
             .expect(200);
@@ -41,14 +41,15 @@ describe('PUT /rules/:id', () => {
         const rule = policyObj.toObject().rules[0];
         rule.name = 'something I just came up with';
         await request(app)
-            .put(`/rules/${rule._id.toString()}`)
+            .put(`/rules/${rule.id}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(rule)
             .expect(200);
-        const updatedPolicy = await Policy.findOne({"rules._id": rule._id});
+        const updatedPolicy = await Policy.findOne({"rules._id": new mongoose.Types.ObjectId(rule.id)});
         updatedPolicy
             .rules
-            .filter(_rule => rule._id.toString() === _rule._id.toString())
+            .map(_rule => _rule.toObject())
+            .filter(_rule => rule.id === _rule._id)
             .forEach(_rule => {
                 expect(_rule.name).toBe('something I just came up with');
             })
@@ -57,15 +58,17 @@ describe('PUT /rules/:id', () => {
     it('should not update if the rule does not exist', async () => {
         const policyObj = await Policy.findOne({tenantId: 15});
         const rule = policyObj.toObject().rules[0];
-        delete rule['_id'];
+        delete rule['id'];
         delete rule['updatedAt'];
         delete rule['createdAt'];
 
+        const ruleId = "abcdefabcdefabcdefabcdef";
         const response = await request(app)
-            .put(`/rules/abcdefabcdefabcdefabcdef`)
+            .put(`/rules/${ruleId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(rule);
-        expect(response.body).toStrictEqual({});
+        expect(response.statusCode).toBe(404);
+        expect(response.body).toStrictEqual("");
     });
 
     it('should return a valid rule if updated', async () => {
@@ -73,10 +76,9 @@ describe('PUT /rules/:id', () => {
         const rule = policyObj.toObject().rules[0];
         rule.name = 'something I just came up with';
         const response = await request(app)
-            .put(`/rules/${rule._id.toString()}`)
+            .put(`/rules/${rule.id}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .send(rule);
-        const Rule = mongoose.model('Rule', RuleSchema);
         const ruleObj = new Rule(response.body);
         try {
             await ruleObj.validateSync();

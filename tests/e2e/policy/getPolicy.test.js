@@ -19,7 +19,7 @@ describe('GET /policies/:id', () => {
 
     it('should be disallowed to call without a valid authentication header', async () => {
         const policyObj = await Policy.findOne({});
-        const policyId = policyObj.toObject()._id.toString();
+        const policyId = policyObj.toObject().id;
         await request(app)
             .get(`/policies/${policyId}`)
             .expect(401);
@@ -27,7 +27,7 @@ describe('GET /policies/:id', () => {
 
     it('should be allowed to call with a valid authentication header', async () => {
         const policyObj = await Policy.findOne({tenantId: 15});
-        const policyId = policyObj.toObject()._id.toString();
+        const policyId = policyObj.toObject().id;
         await request(app)
             .get(`/policies/${policyId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
@@ -36,16 +36,16 @@ describe('GET /policies/:id', () => {
 
     it('should return a policy according to the specified id', async () => {
         const policyObj = await Policy.findOne({tenantId: 15});
-        const policyId = policyObj.toObject()._id.toString();
+        const policyId = policyObj.toObject().id;
         const response = await request(app)
             .get(`/policies/${policyId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
-        expect(response.body._id).toBe(policyId);
+        expect(response.body.id).toBe(policyId);
     });
 
     it('should return an object of type Policy', async () => {
         const policyObj = await Policy.findOne({tenantId: 15});
-        const policyId = policyObj.toObject()._id.toString();
+        const policyId = policyObj.toObject().id;
         const response = await request(app)
             .get(`/policies/${policyId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
@@ -60,11 +60,11 @@ describe('GET /policies/:id', () => {
 
     it('should not return a policy of a tenant that is not in the JWT', async () => {
         const policyObj = await Policy.findOne({tenantId: 25});
-        const policyId = policyObj.toObject()._id.toString();
+        const policyId = policyObj.toObject().id;
         const response = await request(app)
             .get(`/policies/${policyId}`)
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
-            .expect(404);
-        expect(response.body).toBeNull();
+        expect(response.statusCode).toBe(403);
+        expect(response.text).toEqual("");
     });
 });

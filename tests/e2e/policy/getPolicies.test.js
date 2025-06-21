@@ -30,7 +30,7 @@ describe('GET /policies', () => {
             .expect(200);
     });
 
-    it('should filter policies not belonging to tenant 15 (from JWT)', async () => {
+    it('should filter out policies not belonging to tenant 15 (from JWT)', async () => {
         const response = await request(app)
             .get('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
@@ -86,25 +86,26 @@ describe('GET /policies', () => {
     });
 
     it('should filter by author if specified', async () => {
-        const response_1 = await request(app)
+        let response;
+        response = await request(app)
             .get('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .query({author: 'idan.mittelpunkt@gmail.com'})
 
-        expect(response_1.body.length).toBeGreaterThan(0);
+        expect(response.body.length).toBeGreaterThan(0);
 
-        response_1.body.forEach(policy => {
+        response.body.forEach(policy => {
             expect(policy.author).toEqual('idan.mittelpunkt@gmail.com');
         })
 
-        const response_2 = await request(app)
+        response = await request(app)
             .get('/policies')
             .set('Authorization', 'Bearer ' + process.env.JWT_TOKEN)
             .query({author: 'someone.something@gmail.com'})
 
-        expect(response_2.body.length).toBeGreaterThan(0);
+        expect(response.body.length).toBeGreaterThan(0);
 
-        response_2.body.forEach(policy => {
+        response.body.forEach(policy => {
             expect(policy.author).toEqual('someone.something@gmail.com');
         })
     });
